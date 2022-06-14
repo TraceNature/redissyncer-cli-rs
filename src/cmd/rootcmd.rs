@@ -1,20 +1,19 @@
 use crate::cmd::requestsample::new_requestsample_cmd;
-use crate::cmd::{new_config_cmd, new_multi_cmd, new_task_cmd};
+use crate::cmd::{new_config_cmd, new_task_cmd};
 use crate::commons::CommandCompleter;
 use crate::commons::SubCmd;
 
-use crate::configure::set_config_file_path;
-use crate::configure::{self, get_config, get_config_file_path};
+use crate::configure::{self, get_config, get_config_file_path, Config};
+use crate::configure::{generate_default_config, set_config_file_path};
 use crate::request::{req, ReqResult, Request, RequestTaskListAll};
 use crate::{configure::set_config, interact};
 use clap::{Arg, ArgMatches, Command as clap_Command};
 use lazy_static::lazy_static;
-use log::info;
+use log::{info, log};
 
 use std::borrow::Borrow;
 use std::{env, fs, thread};
 
-use crate::cmd::loopcmd::new_loop_cmd;
 use chrono::prelude::Local;
 use fork::{daemon, Fork};
 use std::fs::File;
@@ -41,16 +40,9 @@ lazy_static! {
                 .takes_value(true)
         )
         .arg(
-            Arg::new("daemon")
-                .short('d')
-                .long("daemon")
-                .help("run as daemon")
-        )
-        .arg(
             Arg::new("interact")
                 .short('i')
                 .long("interact")
-                .conflicts_with("daemon")
                 .help("run as interact mod")
         )
         .arg(
@@ -62,9 +54,7 @@ lazy_static! {
         )
         .subcommand(new_requestsample_cmd())
         .subcommand(new_config_cmd())
-        .subcommand(new_multi_cmd())
         .subcommand(new_task_cmd())
-        .subcommand(new_loop_cmd())
         .subcommand(
             clap::Command::new("test")
                 .about("controls testing features")
@@ -85,7 +75,7 @@ pub fn run_app() {
         println!("config path is:{}", c);
         set_config_file_path(c.to_string());
     }
-    set_config(&get_config_file_path());
+    // set_config(&get_config_file_path());
     cmd_match(&matches);
 }
 
@@ -144,58 +134,20 @@ pub fn process_exists(pid: &u32) -> bool {
 }
 
 fn cmd_match(matches: &ArgMatches) {
-    let config = get_config().unwrap();
-    let server = &config["server"];
-    let req = Request::new(server.clone());
-
-    if matches.is_present("daemon") {
-        let args: Vec<String> = env::args().collect();
-        if let Ok(Fork::Child) = daemon(true, true) {
-            // 启动子进程
-            let mut cmd = Command::new(&args[0]);
-
-            for idx in 1..args.len() {
-                let arg = args.get(idx).expect("get cmd arg error!");
-                // 去除后台启动参数,避免重复启动
-                if arg.eq("-d") || arg.eq("-daemon") {
-                    continue;
-                }
-                cmd.arg(arg);
-            }
-
-            let child = cmd.spawn().expect("Child process failed to start.");
-            fs::write("pid", child.id().to_string()).unwrap();
-            println!("process id is:{}", std::process::id());
-            println!("child id is:{}", child.id());
-        }
-        println!("{}", "daemon mod");
-        std::process::exit(0);
+    if let Some(c) = matches.value_of("config") {
+        set_config_file_path(c.to_string());
+        set_config(&get_config_file_path());
+    } else {
+        set_config("");
     }
+
+    let config = get_config().unwrap();
+    let server = config.server;
+    let req = Request::new(server.clone()).unwrap();
 
     if matches.is_present("interact") {
         interact::run();
         return;
-    }
-
-    if let Some(ref _matches) = matches.subcommand_matches("loop") {
-        let term = Arc::new(AtomicBool::new(false));
-        let sigint_2 = Arc::new(AtomicBool::new(false));
-        signal_hook::flag::register(signal_hook::consts::SIGTERM, Arc::clone(&term)).unwrap();
-        signal_hook::flag::register(signal_hook::consts::SIGINT, Arc::clone(&sigint_2)).unwrap();
-        loop {
-            if sigint_2.load(Ordering::Relaxed) {
-                println!("{}", "singint signal recived");
-                break;
-            }
-
-            thread::sleep(Duration::from_millis(1000));
-            if term.load(Ordering::Relaxed) {
-                println!("{:?}", term);
-                break;
-            }
-            let dt = Local::now();
-            let _ = fs::write("timestamp", dt.timestamp_millis().to_string());
-        }
     }
 
     // You can check for the existence of subcommands, and if found use their
@@ -339,17 +291,39 @@ fn cmd_match(matches: &ArgMatches) {
     if let Some(config) = matches.subcommand_matches("config") {
         if let Some(show) = config.subcommand_matches("show") {
             match show.subcommand_name() {
-                Some("all") => {
-                    println!("config show all");
-                    info!("log show all");
-                    configure::get_config_file_path();
-                    println!("{:?}", configure::get_config());
+                Some("current") => {
+                    let current = configure::get_config().expect("get current configure error!");
+                    let yml =
+                        serde_yaml::to_string(&current).expect("pars configure to yaml error!");
+                    println!("{}", yml);
                 }
-                Some("info") => {
-                    println!("config show info");
+                Some("default") => {
+                    let config = Config::default();
+                    let yml = serde_yaml::to_string(&config);
+                    match yml {
+                        Ok(y) => {
+                            println!("{}", y);
+                        }
+                        Err(e) => {
+                            log::error!("{}", e);
+                        }
+                    }
                 }
                 _ => {}
             }
+        }
+        if let Some(gen_config) = config.subcommand_matches("gendefault") {
+            let mut file = String::from("");
+            if let Some(path) = gen_config.value_of("filepath") {
+                file.push_str(path);
+            } else {
+                file.push_str("config_default.yml")
+            }
+            if let Err(e) = generate_default_config(file.as_str()) {
+                log::error!("{}", e);
+                return;
+            };
+            println!("{} created!", file);
         }
     }
 }

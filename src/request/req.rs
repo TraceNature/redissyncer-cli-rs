@@ -3,9 +3,11 @@ use reqwest::Client;
 use reqwest::Response;
 use serde_json::{Map, Value};
 use std::fmt::Debug;
+use std::time::Duration;
 use url::Url;
 
 //api path const
+
 const API_LOGIN: &str = "/login";
 const API_TASK_CREATE: &str = "/api/task/create";
 const API_TASK_START: &str = "/api/task/start";
@@ -34,11 +36,17 @@ pub struct Request {
 }
 
 impl Request {
-    pub fn new(server: String) -> Self {
-        Self {
-            client: Client::default(),
+    pub fn new(server: String) -> Result<Self> {
+        let req_client = reqwest::Client::builder()
+            .timeout(Duration::from_secs(10))
+            .build()
+            .map_err(|e| {
+                return ResponseError::OptionError(e.to_string());
+            })?;
+        Ok(Self {
+            client: req_client,
             server,
-        }
+        })
     }
 
     pub async fn send(&self, url: Url, body: String) -> Result<Response> {

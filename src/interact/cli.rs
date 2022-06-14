@@ -97,7 +97,7 @@ pub fn run() {
     };
 
     let mut rl = Editor::with_config(config);
-    // let mut rl = Editor::<()>::new();
+
     rl.set_helper(Some(h));
 
     if rl.load_history("/tmp/history").is_err() {
@@ -105,7 +105,7 @@ pub fn run() {
     }
 
     loop {
-        let p = format!("{}> ", "interact-rs");
+        let p = format!("{}> ", "redissyncer-cli");
         rl.helper_mut().expect("No helper").colored_prompt = format!("\x1b[1;32m{}\x1b[0m", p);
         let readline = rl.readline(&p);
         match readline {
