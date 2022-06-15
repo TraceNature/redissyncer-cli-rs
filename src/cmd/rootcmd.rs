@@ -3,10 +3,10 @@ use crate::cmd::{new_config_cmd, new_task_cmd};
 use crate::commons::CommandCompleter;
 use crate::commons::SubCmd;
 
-use crate::configure::{self, get_config, get_config_file_path, Config};
+use crate::configure::{self, get_config, get_config_file_path, set_config, Config};
 use crate::configure::{generate_default_config, set_config_file_path};
-use crate::request::{req, ReqResult, Request, RequestTaskListAll};
-use crate::{configure::set_config, interact};
+use crate::request::{req, ReqResult, Request, RequestLogin, RequestTaskListAll};
+use crate::{configure::set_config_from_file, interact};
 use clap::{Arg, ArgMatches, Command as clap_Command};
 use lazy_static::lazy_static;
 use log::{info, log};
@@ -14,8 +14,10 @@ use log::{info, log};
 use std::borrow::Borrow;
 use std::{env, fs, thread};
 
+use crate::cmd::cmdlogin::new_login_cmd;
 use chrono::prelude::Local;
 use fork::{daemon, Fork};
+use serde_json::Value;
 use std::fs::File;
 use std::io::Read;
 use std::process::Command;
@@ -26,10 +28,10 @@ use std::time::Duration;
 use sysinfo::{PidExt, System, SystemExt};
 
 lazy_static! {
-    static ref CLIAPP: clap::Command<'static> = clap::Command::new("interact-rs")
+    static ref CLIAPP: clap::Command<'static> = clap::Command::new("redissyncer-cli-rs")
         .version("1.0")
         .author("Shiwen Jia. <jiashiwen@gmail.com>")
-        .about("command line sample")
+        .about("redissyncer command line interface")
         .arg_required_else_help(true)
         .arg(
             Arg::new("config")
@@ -55,6 +57,7 @@ lazy_static! {
         .subcommand(new_requestsample_cmd())
         .subcommand(new_config_cmd())
         .subcommand(new_task_cmd())
+        .subcommand(new_login_cmd())
         .subcommand(
             clap::Command::new("test")
                 .about("controls testing features")
@@ -136,9 +139,9 @@ pub fn process_exists(pid: &u32) -> bool {
 fn cmd_match(matches: &ArgMatches) {
     if let Some(c) = matches.value_of("config") {
         set_config_file_path(c.to_string());
-        set_config(&get_config_file_path());
+        set_config_from_file(&get_config_file_path());
     } else {
-        set_config("");
+        set_config_from_file("");
     }
 
     let config = get_config().unwrap();
@@ -171,6 +174,56 @@ fn cmd_match(matches: &ArgMatches) {
         };
     }
 
+    if let Some(ref login) = matches.subcommand_matches("login") {
+        let u = login.value_of("username").expect("get username error!");
+        let p = login.value_of("password").expect("get password error!");
+
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let async_req = async {
+            let resp = req.login(u.to_string(), p.to_string()).await;
+            // let result = ReqResult::new(resp);
+
+            match resp {
+                Ok(r) => match r.text().await {
+                    Ok(t) => match serde_json::from_str::<Value>(t.as_str()) {
+                        Ok(v) => {
+                            if v["code"] != "2000" {
+                                eprintln!("{}", t);
+                                return;
+                            }
+                            let token = v["data"]["token"].as_str();
+                            if let Some(t) = token {
+                                // 显示token
+                                println!("token: {}", t);
+                                // token写入当前配置
+                                let mut c = get_config().unwrap();
+                                c.token = t.to_string();
+                                c.flush_to_file(get_config_file_path());
+                                println!("update your config file success!");
+                                set_config(c);
+                                println!("your current config update");
+
+                                println!("{}", get_config_file_path())
+                                // 刷新配置文件
+                            }
+                        }
+                        Err(e) => {
+                            println!("{:?}", e);
+                        }
+                    },
+                    Err(e) => {
+                        println!("{:?}", e);
+                    }
+                },
+                Err(e) => {
+                    println!("{:?}", e);
+                }
+            }
+            // result.normal_parsor().await;
+        };
+        rt.block_on(async_req);
+    }
+
     if let Some(ref matches) = matches.subcommand_matches("task") {
         if let Some(create) = matches.subcommand_matches("create") {
             let file = File::open(create.value_of("path").unwrap());
@@ -194,6 +247,7 @@ fn cmd_match(matches: &ArgMatches) {
                 }
             }
         }
+
         if let Some(start) = matches.subcommand_matches("start") {
             if let Some(taskid) = start.value_of("taskid") {
                 let rt = tokio::runtime::Runtime::new().unwrap();

@@ -1,4 +1,6 @@
+use crate::configure::get_config;
 use crate::request::requestmodules::{RequestTaskListAll, RequestTaskListByNodeID};
+use crate::request::RequestLogin;
 use reqwest::Client;
 use reqwest::Response;
 use serde_json::{Map, Value};
@@ -27,7 +29,8 @@ pub enum ResponseError {
     OptionError(String),
 }
 
-pub type Result<T, E = ResponseError> = std::result::Result<T, E>;
+// pub type Result<T, E = ResponseError> = std::result::Result<T, E>;
+pub type Result<T, E = ResponseError> = anyhow::Result<T, E>;
 
 #[derive(Default, Debug)]
 pub struct Request {
@@ -50,9 +53,34 @@ impl Request {
     }
 
     pub async fn send(&self, url: Url, body: String) -> Result<Response> {
-        let resp = self.client.post(url).body(body).send().await.map_err(|e| {
+        let token = get_config().unwrap().token;
+        let resp = self
+            .client
+            .post(url)
+            .body(body)
+            .header("Content-Type", "application/json")
+            .header("X-Token", token)
+            .send()
+            .await
+            .map_err(|e| {
+                return ResponseError::OptionError(e.to_string());
+            })?;
+        Result::Ok(resp)
+    }
+}
+
+impl Request {
+    pub async fn login(&self, username: String, password: String) -> Result<Response> {
+        let mut server = self.server.clone();
+        server.push_str(API_LOGIN);
+        let url = Url::parse(server.as_str()).map_err(|e| {
             return ResponseError::OptionError(e.to_string());
         })?;
+        let req_login = RequestLogin::new(username, password);
+        let body = serde_json::to_string(&req_login).map_err(|e| {
+            return ResponseError::OptionError(e.to_string());
+        })?;
+        let resp = self.send(url, body).await?;
         Result::Ok(resp)
     }
 }

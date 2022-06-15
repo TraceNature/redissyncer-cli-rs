@@ -29,6 +29,23 @@ impl Config {
     pub fn get_config_image(&self) -> Self {
         self.clone()
     }
+
+    pub fn flush_to_file(&self, path: String) -> Result<()> {
+        // let mut file = String::from("");
+        // if let Some(path) = gen_config.value_of("filepath") {
+        //     file.push_str(path);
+        // } else {
+        //     file.push_str("config_default.yml")
+        // }
+        // if let Err(e) = generate_default_config(file.as_str()) {
+        //     log::error!("{}", e);
+        //     return;
+        // };
+        // let config = Config::default();
+        let yml = serde_yaml::to_string(&self)?;
+        fs::write(path, yml)?;
+        Ok(())
+    }
 }
 
 pub fn generate_default_config(path: &str) -> Result<()> {
@@ -49,13 +66,18 @@ lazy_static::lazy_static! {
     });
 }
 
-pub fn set_config(path: &str) {
+pub fn set_config(config: Config) {
+    GLOBAL_CONFIG.lock().unwrap().set_self(config);
+}
+
+pub fn set_config_from_file(path: &str) {
     if path.is_empty() {
         if Path::new("config.yml").exists() {
             let contents =
                 fs::read_to_string("config.yml").expect("Read config file config.yml error!");
             let config = from_str::<Config>(contents.as_str()).expect("Parse config.yml error!");
             GLOBAL_CONFIG.lock().unwrap().set_self(config);
+            set_config_file_path("./config.yml".to_string());
         }
         return;
     }
@@ -64,6 +86,7 @@ pub fn set_config(path: &str) {
     let contents = fs::read_to_string(path).expect(err_str.as_str());
     let config = from_str::<Config>(contents.as_str()).expect("Parse config.yml error!");
     GLOBAL_CONFIG.lock().unwrap().set_self(config);
+    set_config_file_path(path.to_string());
 }
 
 pub fn set_config_file_path(path: String) {

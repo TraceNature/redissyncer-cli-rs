@@ -1,3 +1,4 @@
+use anyhow::{anyhow, Result};
 use prettytable::{cell, row, Cell, Row, Table};
 use reqwest::Response;
 use serde_json::{to_string_pretty, Value};
@@ -15,6 +16,12 @@ impl ReqResult {
 }
 
 impl ReqResult {
+    pub async fn get_body(self) -> Result<String> {
+        match self.result {
+            Ok(resp) => resp.text().await.map_err(|e| anyhow!("{}", e.to_string())),
+            Err(e) => Err(anyhow!("{:?}", e)),
+        }
+    }
     //处理一般的response，只解析json 并打印错误
     pub async fn normal_parsor(self) {
         match self.result {
@@ -91,7 +98,6 @@ impl ReqResult {
                 };
             }
             Err(e) => {
-                // error!("{:?}", e);
                 println!("{:?}", e)
             }
         }

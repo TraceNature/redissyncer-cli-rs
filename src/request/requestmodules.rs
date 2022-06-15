@@ -2,6 +2,29 @@ use serde::{Deserialize, Serialize};
 
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Debug, Default)]
+pub struct RequestLogin {
+    username: String,
+    password: String,
+}
+
+impl RequestLogin {
+    pub fn default() -> Self {
+        Self {
+            username: "".to_string(),
+            password: "".to_string(),
+        }
+    }
+
+    pub fn new(username: String, password: String) -> Self {
+        Self {
+            username: username,
+            password: password,
+        }
+    }
+}
+
+#[allow(non_snake_case)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct RequestTaskListAll {
     batchSize: usize,
     queryID: String,

@@ -9,3 +9,4 @@ pub use config_global::Config;
 
 pub use config_global::set_config;
 pub use config_global::set_config_file_path;
+pub use config_global::set_config_from_file;
