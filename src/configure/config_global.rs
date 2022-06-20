@@ -31,17 +31,6 @@ impl Config {
     }
 
     pub fn flush_to_file(&self, path: String) -> Result<()> {
-        // let mut file = String::from("");
-        // if let Some(path) = gen_config.value_of("filepath") {
-        //     file.push_str(path);
-        // } else {
-        //     file.push_str("config_default.yml")
-        // }
-        // if let Err(e) = generate_default_config(file.as_str()) {
-        //     log::error!("{}", e);
-        //     return;
-        // };
-        // let config = Config::default();
         let yml = serde_yaml::to_string(&self)?;
         fs::write(path, yml)?;
         Ok(())
