@@ -2,7 +2,11 @@
 
 ## 本机构建
 
+* ubuntu
+
 ```shell
+sudo apt install pkg-config
+sudo apt-get install libudev-dev
 cargo build --release
 ```
 
