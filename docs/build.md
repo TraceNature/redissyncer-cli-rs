@@ -12,15 +12,30 @@ cargo build --release
 
 ## 交叉编译
 
-[参考文档](https://www.cnblogs.com/007sx/p/15191400.html)
+[参考文档]
+
+* https://www.cnblogs.com/007sx/p/15191400.html
+* https://kerkour.com/rust-cross-compilation
 
 ### 环境配置
 
-* 安装
+* os ubuntu 20.04
+
+* 安装Rust
 
 ```shell
-rustup target add x86_64-unknown-linux-musl
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
+
+* 安装 cross
+
+https://github.com/cross-rs/cross
+
+```shell
+cargo install -f cross
+```
+
+* 编译 window 可执行文件
 
 ```shell
 brew install filosottile/musl-cross/musl-cross
