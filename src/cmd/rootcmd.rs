@@ -16,7 +16,6 @@ use std::{env, fs, thread};
 
 use crate::cmd::cmdlogin::new_login_cmd;
 use chrono::prelude::Local;
-use fork::{daemon, Fork};
 use serde_json::Value;
 use std::fs::File;
 use std::io::Read;
