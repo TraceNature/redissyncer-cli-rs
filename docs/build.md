@@ -16,5 +16,8 @@ cargo build --release
 
 ```shell
 rustup target add x86_64-unknown-linux-musl
+```
 
+```shell
+brew install filosottile/musl-cross/musl-cross
 ```
