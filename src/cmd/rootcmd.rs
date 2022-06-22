@@ -235,7 +235,8 @@ fn cmd_match(matches: &ArgMatches) {
                     };
                     let rt = tokio::runtime::Runtime::new().unwrap();
                     let async_req = async {
-                        let resp = req.create_task(data).await;
+                        // let resp = req.create_task(data).await;
+                        let resp = req.origin_task_create(data).await;
                         let result = ReqResult::new(resp);
                         result.normal_parsor().await;
                     };
@@ -251,7 +252,8 @@ fn cmd_match(matches: &ArgMatches) {
             if let Some(taskid) = start.value_of("taskid") {
                 let rt = tokio::runtime::Runtime::new().unwrap();
                 let async_req = async {
-                    let resp = req.task_start(taskid.to_string()).await;
+                    // let resp = req.task_start(taskid.to_string()).await;
+                    let resp = req.origin_task_start(taskid.to_string()).await;
                     let result = ReqResult::new(resp);
                     result.normal_parsor().await;
                 };
@@ -262,7 +264,8 @@ fn cmd_match(matches: &ArgMatches) {
             if let Some(taskid) = stop.value_of("taskid") {
                 let rt = tokio::runtime::Runtime::new().unwrap();
                 let async_req = async {
-                    let resp = req.task_stop(taskid.to_string()).await;
+                    // let resp = req.task_stop(taskid.to_string()).await;
+                    let resp = req.origin_task_stop(taskid.to_string()).await;
                     let result = ReqResult::new(resp);
                     result.normal_parsor().await;
                 };
@@ -273,7 +276,8 @@ fn cmd_match(matches: &ArgMatches) {
             if let Some(taskid) = remove.value_of("taskid") {
                 let rt = tokio::runtime::Runtime::new().unwrap();
                 let async_req = async {
-                    let resp = req.task_stop(taskid.to_string()).await;
+                    // let resp = req.task_remove(taskid.to_string()).await;
+                    let resp = req.origin_task_remove(taskid.to_string()).await;
                     let result = ReqResult::new(resp);
                     result.normal_parsor().await;
                 };
@@ -283,25 +287,33 @@ fn cmd_match(matches: &ArgMatches) {
         if let Some(list) = matches.subcommand_matches("list") {
             match list.subcommand_name() {
                 Some("all") => {
-                    let queryid = list.subcommand_matches("all").unwrap().value_of("queryid");
-                    let mut module = RequestTaskListAll::default();
                     let rt = tokio::runtime::Runtime::new().unwrap();
                     let async_req = async {
-                        match queryid {
-                            None => {
-                                let resp = req.task_list_all(module).await;
-                                let result = ReqResult::new(resp);
-                                result.task_list_all_parsor().await;
-                            }
-                            Some(id) => {
-                                module.set_query_id(id.to_string());
-                                let resp = req.task_list_all(module).await;
-                                let result = ReqResult::new(resp);
-                                result.task_list_all_parsor().await;
-                            }
-                        }
+                        let resp = req.origin_task_list_all().await;
+                        let result = ReqResult::new(resp);
+                        result.origin_task_list_all_parsor().await;
+                        // result.normal_parsor().await;
                     };
                     rt.block_on(async_req);
+                    // let queryid = list.subcommand_matches("all").unwrap().value_of("queryid");
+                    // let mut module = RequestTaskListAll::default();
+                    // let rt = tokio::runtime::Runtime::new().unwrap();
+                    // let async_req = async {
+                    //     match queryid {
+                    //         None => {
+                    //             let resp = req.task_list_all(module).await;
+                    //             let result = ReqResult::new(resp);
+                    //             result.task_list_all_parsor().await;
+                    //         }
+                    //         Some(id) => {
+                    //             module.set_query_id(id.to_string());
+                    //             let resp = req.task_list_all(module).await;
+                    //             let result = ReqResult::new(resp);
+                    //             result.task_list_all_parsor().await;
+                    //         }
+                    //     }
+                    // };
+                    // rt.block_on(async_req);
                 }
                 Some("byid") => {
                     let queryid = list.subcommand_matches("byid").unwrap().value_of("taskid");
@@ -310,9 +322,10 @@ fn cmd_match(matches: &ArgMatches) {
                         let mut ids = vec![];
                         if let Some(id) = queryid {
                             ids.push(id.to_string());
-                            let resp = req.task_list_by_ids(ids).await;
+                            // let resp = req.task_list_by_ids(ids).await;
+                            let resp = req.origin_task_list_by_id(ids).await;
                             let result = ReqResult::new(resp);
-                            result.task_list_byid_parsor().await;
+                            result.normal_parsor().await;
                         }
                     };
                     rt.block_on(async_req);

@@ -20,16 +20,22 @@ const API_TASK_LIST_BY_IDS: &str = "/api/task/listbyids";
 const API_TASK_LIST_BY_NAMES: &str = "/api/task/listbynames";
 const API_TASK_LIST_BY_GROUPIDS: &str = "/task/listbygroupids";
 const API_TASK_LIST_BY_NODE: &str = "/api/task/listbynode";
-
 const API_IMPORT_FILE_PATH: &str = "/api/v2/file/createtask";
 const API_NODE_LIST_ALL: &str = "/api/node/listall";
+
+//redissyncer-server 原始API
+const API_ORIGIN_TASK_CREATE: &str = "/api/v2/createtask";
+const API_ORIGIN_TASK_REMOVE: &str = "/api/v2/removetask";
+const API_ORIGIN_TASK_START: &str = "/api/v2/starttask";
+const API_ORIGIN_TASK_STOP: &str = "/api/v2/stoptask";
+const API_ORIGIN_TASK_LIST: &str = "/api/v2/listtasks";
+const API_ORIGIN_IMPORT: &str = "/api/v2/file/createtask";
 
 #[derive(Debug)]
 pub enum ResponseError {
     OptionError(String),
 }
 
-// pub type Result<T, E = ResponseError> = std::result::Result<T, E>;
 pub type Result<T, E = ResponseError> = anyhow::Result<T, E>;
 
 #[derive(Default, Debug)]
@@ -83,6 +89,92 @@ impl Request {
         let resp = self.send(url, body).await?;
         Result::Ok(resp)
     }
+}
+
+// redissyncer 原始api调用
+impl Request {
+    pub async fn origin_task_create(&self, body: String) -> Result<Response> {
+        let mut server = self.server.clone();
+        server.push_str(API_ORIGIN_TASK_CREATE);
+        let url = Url::parse(server.as_str()).map_err(|e| {
+            return ResponseError::OptionError(e.to_string());
+        })?;
+        println!("{}", url);
+        let resp = self.send(url, body).await?;
+        Result::Ok(resp)
+    }
+
+    pub async fn origin_task_start(&self, task_id: String) -> Result<Response> {
+        let mut server = self.server.clone();
+        server.push_str(API_ORIGIN_TASK_START);
+        let url = Url::parse(server.as_str()).map_err(|e| {
+            return ResponseError::OptionError(e.to_string());
+        })?;
+        let mut map = Map::new();
+        map.insert("taskID".to_string(), Value::from(task_id));
+        let json = Value::Object(map);
+        let resp = self.send(url, json.to_string()).await?;
+        Result::Ok(resp)
+    }
+    pub async fn origin_task_stop(&self, task_id: String) -> Result<Response> {
+        let mut server = self.server.clone();
+        server.push_str(API_ORIGIN_TASK_STOP);
+        let url = Url::parse(server.as_str()).map_err(|e| {
+            return ResponseError::OptionError(e.to_string());
+        })?;
+        let mut ids = vec![];
+        let mut map = Map::new();
+        ids.push(task_id);
+        map.insert("taskids".to_string(), Value::from(ids));
+        let json = Value::Object(map);
+        let resp = self.send(url, json.to_string()).await?;
+        Result::Ok(resp)
+    }
+    pub async fn origin_task_remove(&self, task_id: String) -> Result<Response> {
+        let mut server = self.server.clone();
+        server.push_str(API_ORIGIN_TASK_REMOVE);
+        let url = Url::parse(server.as_str()).map_err(|e| {
+            return ResponseError::OptionError(e.to_string());
+        })?;
+        let mut ids = vec![];
+        let mut map = Map::new();
+        ids.push(task_id);
+        map.insert("taskids".to_string(), Value::from(ids));
+        let json = Value::Object(map);
+        let resp = self.send(url, json.to_string()).await?;
+        Result::Ok(resp)
+    }
+    pub async fn origin_task_list_all(&self) -> Result<Response> {
+        // let body = serde_json::to_string(&module).map_err(|e| {
+        //     return ResponseError::OptionError(e.to_string());
+        // })?;
+        let mut server = self.server.clone();
+        server.push_str(API_ORIGIN_TASK_LIST);
+        let url = Url::parse(server.as_str()).map_err(|e| {
+            return ResponseError::OptionError(e.to_string());
+        })?;
+        let mut map = Map::new();
+        map.insert("regulation".to_string(), Value::from("all"));
+        let json = Value::Object(map);
+        let resp = self.send(url, json.to_string()).await?;
+        Result::Ok(resp)
+    }
+    pub async fn origin_task_list_by_id(&self, ids: Vec<String>) -> Result<Response> {
+        let mut server = self.server.clone();
+        server.push_str(API_ORIGIN_TASK_LIST);
+        let url = Url::parse(server.as_str()).map_err(|e| {
+            return ResponseError::OptionError(e.to_string());
+        })?;
+
+        let mut map = Map::new();
+        map.insert("regulation".to_string(), Value::from("byids"));
+        map.insert("taskids".to_string(), Value::from(ids));
+        let json = Value::Object(map);
+        let resp = self.send(url, json.to_string()).await?;
+        Result::Ok(resp)
+    }
+    pub async fn origin_task_list_byname(&self) {}
+    pub async fn origin_task_import() {}
 }
 
 impl Request {

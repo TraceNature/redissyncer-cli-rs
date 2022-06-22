@@ -46,6 +46,55 @@ impl ReqResult {
             }
         }
     }
+
+    pub async fn origin_task_list_all_parsor(self) {
+        match self.result {
+            Ok(resp) => {
+                if let Ok(body) = resp.text().await {
+                    match serde_json::from_str::<Value>(body.clone().as_str()) {
+                        Ok(body) => {
+                            // assert!(body["errors"].is_null());
+                            if body["errors"].is_null() {
+                                let mut table = Table::new();
+                                table.add_row(row!["taskID", "source", "target", "status"]);
+                                // println!("taskStatus is array: {:?}", body["taskStatus"].as_array());
+                                if let Some(valuse) = body["data"].as_array() {
+                                    for iterm in valuse {
+                                        let taskid = iterm["taskId"].as_str().unwrap();
+                                        let source = iterm["sourceRedisAddress"].as_str().unwrap();
+                                        let target = iterm["targetRedisAddress"].as_str().unwrap();
+                                        let status = iterm["status"].as_str().unwrap();
+                                        table.add_row(Row::new(vec![
+                                            Cell::new(taskid),
+                                            Cell::new(source),
+                                            Cell::new(target),
+                                            Cell::new(status.to_string().as_str()),
+                                        ]));
+                                    }
+                                };
+
+                                // Print the table to stdout
+                                table.printstd();
+                            } else {
+                                match serde_json::to_string_pretty(&body) {
+                                    Ok(str) => {
+                                        println!("{}", str);
+                                    }
+                                    Err(e) => println!("{}", e),
+                                }
+                            }
+                        }
+                        Err(e) => {
+                            println!("{}", e.to_string());
+                        }
+                    }
+                };
+            }
+            Err(e) => {
+                println!("{:?}", e)
+            }
+        }
+    }
     pub async fn task_list_all_parsor(self) {
         match self.result {
             Ok(resp) => {

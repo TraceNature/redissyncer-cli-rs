@@ -1,7 +1,7 @@
 {
   "sourcePassword": "redistest0102",
-  "sourceRedisAddress": "10.0.1.101:6379",
-  "targetRedisAddress": "10.0.1.102:6379",
+  "sourceRedisAddress": "10.0.1.31:16374",
+  "targetRedisAddress": "10.0.1.32:16374",
   "targetPassword": "redistest0102",
   "taskName": "single2single",
   "targetRedisVersion": 4.0,
