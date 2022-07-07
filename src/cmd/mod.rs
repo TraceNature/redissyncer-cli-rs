@@ -1,9 +1,11 @@
+mod cmdcluster;
 mod cmdconfig;
 mod cmdlogin;
 mod cmdtask;
 mod requestsample;
 mod rootcmd;
 
+pub use cmdcluster::new_cluster_cmd;
 pub use cmdconfig::new_config_cmd;
 pub use cmdlogin::new_login_cmd;
 pub use cmdtask::new_task_cmd;

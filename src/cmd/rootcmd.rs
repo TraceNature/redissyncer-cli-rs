@@ -1,5 +1,5 @@
 use crate::cmd::requestsample::new_requestsample_cmd;
-use crate::cmd::{new_config_cmd, new_task_cmd};
+use crate::cmd::{new_cluster_cmd, new_config_cmd, new_task_cmd};
 use crate::commons::CommandCompleter;
 use crate::commons::SubCmd;
 
@@ -57,6 +57,7 @@ lazy_static! {
         .subcommand(new_config_cmd())
         .subcommand(new_task_cmd())
         .subcommand(new_login_cmd())
+        .subcommand(new_cluster_cmd())
         .subcommand(
             clap::Command::new("test")
                 .about("controls testing features")
@@ -218,11 +219,101 @@ fn cmd_match(matches: &ArgMatches) {
                     println!("{:?}", e);
                 }
             }
-            // result.normal_parsor().await;
         };
         rt.block_on(async_req);
     }
 
+    // 集群模式下的任务处理解析
+    if let Some(ref cluster) = matches.subcommand_matches("cluster") {
+        if let Some(ref task) = matches.subcommand_matches("task") {
+            if let Some(ref create) = matches.subcommand_matches("create") {
+                println!("create task!");
+                // ToDo
+                // 实现集群模式下的任务创建逻辑
+            }
+
+            if let Some(ref start) = matches.subcommand_matches("start") {
+                println!("start task!")
+                // ToDo
+                // 实现集群模式下任务启动逻辑
+            }
+
+            if let Some(ref stop) = matches.subcommand_matches("stop") {
+                println!("stop task!")
+                // Todo
+                // 实现集群模式下停止任务逻辑
+            }
+
+            if let Some(ref remove) = matches.subcommand_matches("remove") {
+                println!("remove task!")
+                // Todo
+                // 实现集群模式下删除任务逻辑
+            }
+
+            if let Some(ref list) = matches.subcommand_matches("list") {
+                match list.subcommand_name() {
+                    Some("all") => {
+                        let queryid = list.subcommand_matches("all").unwrap().value_of("queryid");
+                        let mut module = RequestTaskListAll::default();
+                        let rt = tokio::runtime::Runtime::new().unwrap();
+                        let async_req = async {
+                            match queryid {
+                                None => {
+                                    let resp = req.task_list_all(module).await;
+                                    let result = ReqResult::new(resp);
+                                    result.task_list_all_parsor().await;
+                                }
+                                Some(id) => {
+                                    module.set_query_id(id.to_string());
+                                    let resp = req.task_list_all(module).await;
+                                    let result = ReqResult::new(resp);
+                                    result.task_list_all_parsor().await;
+                                }
+                            }
+                        };
+                        rt.block_on(async_req);
+                    }
+                    Some("byid") => {
+                        let queryid = list.subcommand_matches("byid").unwrap().value_of("taskid");
+                        let rt = tokio::runtime::Runtime::new().unwrap();
+                        let async_req = async {
+                            let mut ids = vec![];
+                            if let Some(id) = queryid {
+                                ids.push(id.to_string());
+                                let resp = req.task_list_by_ids(ids).await;
+                                let result = ReqResult::new(resp);
+                                result.normal_parsor().await;
+                            }
+                        };
+                        rt.block_on(async_req);
+                    }
+                    Some("bynames") => {
+                        let names = list
+                            .subcommand_matches("bynames")
+                            .unwrap()
+                            .value_of("tasksname");
+                        let rt = tokio::runtime::Runtime::new().unwrap();
+                        let async_req = async {
+                            // let mut namearry = names;
+                            if let Some(namesstr) = names {
+                                let namearry = namesstr.split(',').collect::<Vec<&str>>();
+                                let resp = req.task_list_by_names(namearry).await;
+                                let result = ReqResult::new(resp);
+                                result.task_list_bynames_parsor().await;
+                            }
+                        };
+                        rt.block_on(async_req);
+                    }
+
+                    _ => {}
+                }
+            }
+        }
+
+        if let Some(ref node) = matches.subcommand_matches("node") {}
+    }
+
+    // 直连连原生引擎的任务相关命令解析
     if let Some(ref matches) = matches.subcommand_matches("task") {
         if let Some(create) = matches.subcommand_matches("create") {
             let file = File::open(create.value_of("path").unwrap());
