@@ -1,4 +1,4 @@
-use crate::cmd::requestsample::new_requestsample_cmd;
+use crate::cmd::cmdserver::new_server_cmd;
 use crate::cmd::{new_cluster_cmd, new_config_cmd, new_task_cmd};
 use crate::commons::CommandCompleter;
 use crate::commons::SubCmd;
@@ -53,22 +53,11 @@ lazy_static! {
                 .takes_value(true)
                 .help("Sets the level of verbosity")
         )
-        .subcommand(new_requestsample_cmd())
+        .subcommand(new_server_cmd())
         .subcommand(new_config_cmd())
         .subcommand(new_task_cmd())
         .subcommand(new_login_cmd())
-        .subcommand(new_cluster_cmd())
-        .subcommand(
-            clap::Command::new("test")
-                .about("controls testing features")
-                .version("1.3")
-                .author("Someone E. <someone_else@other.com>")
-                .arg(
-                    Arg::new("debug")
-                        .short('d')
-                        .help("print debug information verbosely")
-                )
-        );
+        .subcommand(new_cluster_cmd());
     static ref SUBCMDS: Vec<SubCmd> = subcommands();
 }
 
@@ -153,22 +142,21 @@ fn cmd_match(matches: &ArgMatches) {
         return;
     }
 
-    // You can check for the existence of subcommands, and if found use their
-    // matches just as you would the top level app
-    if let Some(ref matches) = matches.subcommand_matches("test") {
-        if matches.is_present("debug") {
-            println!("Printing debug info...");
-        } else {
-            println!("Printing normally...");
-        }
-    }
-
-    if let Some(ref matches) = matches.subcommand_matches("requestsample") {
-        if let Some(_) = matches.subcommand_matches("baidu") {
+    if let Some(ref matches) = matches.subcommand_matches("server") {
+        if let Some(_) = matches.subcommand_matches("alive") {
             let rt = tokio::runtime::Runtime::new().unwrap();
             let async_req = async {
-                let result = req::get_baidu().await;
-                println!("{:?}", result);
+                // let result = req::get_baidu().await;
+                let result = req.health().await;
+
+                match result {
+                    Ok(resp) => {
+                        println!("{}", resp.status())
+                    }
+                    Err(e) => {
+                        println!("{:?}", e);
+                    }
+                }
             };
             rt.block_on(async_req);
         };

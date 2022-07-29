@@ -11,6 +11,7 @@ use url::Url;
 //api path const
 
 const API_LOGIN: &str = "/login";
+const API_HEALTH: &str = "/health";
 const API_TASK_CREATE: &str = "/api/task/create";
 const API_TASK_START: &str = "/api/task/start";
 const API_TASK_STOP: &str = "/api/task/stop";
@@ -87,6 +88,27 @@ impl Request {
             return ResponseError::OptionError(e.to_string());
         })?;
         let resp = self.send(url, body).await?;
+        Result::Ok(resp)
+    }
+
+    pub async fn health(&self) -> Result<Response> {
+        let mut server = self.server.clone();
+        server.push_str(API_HEALTH);
+        let url = Url::parse(server.as_str()).map_err(|e| {
+            return ResponseError::OptionError(e.to_string());
+        })?;
+
+        let token = get_config().unwrap().token;
+        let resp = self
+            .client
+            .get(url)
+            .header("Content-Type", "application/json")
+            .header("X-Token", token)
+            .send()
+            .await
+            .map_err(|e| {
+                return ResponseError::OptionError(e.to_string());
+            })?;
         Result::Ok(resp)
     }
 }
