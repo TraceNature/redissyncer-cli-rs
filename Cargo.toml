@@ -31,6 +31,6 @@ chrono = "0.4.19"
 
 [[example]]
 name = "sshsample"
-path = "examples/sshsample.rs"
+path = "task_create_examples/sshsample.rs"
 
 
