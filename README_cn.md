@@ -1,177 +1,91 @@
-# interactcli-rs
+# redissyncer-cli-rs
 
 [English](README.md)
 
-interactcli-rs 是一个命令行程序框架，用于解决命令行与交互模式一体化问题，包括命令行交互模式统一、子命令提示等功能。该框架集成了clap和shellwords。
+[redissyncer](https://github.com/TraceNature/redissyncer-server) 的客户端cli工具，方便迁移任务操作。
 
-## 快速指南
+## 构建
 
-框架中包含了访问www.baidu.com的例子
+[构建文档](https://github.com/TraceNature/redissyncer-cli-rs/blob/main/docs/build.md)
 
-快速上手过程如下：
+## 功能与使用方法
 
-* clone 项目
+* redissyncer-cli-rs 支持命令行模式和交互模式，"redissyncer-cli -i"进入交互模式
+* 该客户端程序为redissyncer-server客户端程序用与创建、启停、监控redis同步任务，在使用本客户端之前请确保服务端程序正常运行
 
-  ```shell
-  git clone https://github.com/jiashiwen/interactcli-rs.git
-  cd interactcli-rs
-  ```
+## 交互模式举例
 
-* 命令行模式
+"redissyncer-cli-rs -i"进入交互模式
 
-  ```shell
-  cargo run requestsample baidu
-  ```
+* 登录
 
-* 交互模式
-  
-  ```shell
-  cargo run -- -i
-  interact-rs> requestsample baidu
-  ```
+```shell
+redissyncer-cli-rs> login <username> <password>
+```
 
-## 交互模式
+redissyncer-server 默认用户名和密码: admin 123456
 
-交互模式下使用"Tab"键，进行命令提示
+* 创建任务
 
-## 开发步骤
+    * 通过json文件创建任务 createtask.json文件
 
-* 定义命令
-  cmd 模块用于定义命令以及相关子命令
+   ```json
+   {
+       "dbNum":{
+           "1":"1"
+       },
+       "sourcePassword":"xxxxxx",
+       "sourceRedisAddress":"10.0.1.100:6379",
+       "targetRedisAddress":"192.168.0.100:6379",
+       "targetPassword":"xxxxxx",
+       "targetRedisVersion":4,
+       "taskName":"testtask",
+       "autostart":true,
+       "afresh":true,
+       "batchSize":100
+   }
+   ```
 
-  ```rust
-  use clap::Command;
-    
-  pub fn new_requestsample_cmd() -> Command<'static> {
-  clap::Command::new("requestsample")
-  .about("requestsample")
-  .subcommand(get_baidu_cmd())
-  }
-  
-  pub fn get_baidu_cmd() -> Command<'static> {
-  clap::Command::new("baidu").about("request www.baidu.com")
-  }
-  ```
+   ```shell
+   redissyncer-cli-rs> task create source ./createtask.json;
+   ```
 
-  new_requestsample_cmd 函数定义了命令 "requestsample",get_baidu_cmd 函数定义了 requestsample 的子命令 baidu
+更多任务模式请参考[任务模板](https://github.com/TraceNature/redissyncer-cli-rs/tree/main/docs/taskjsonexample)
 
-* 注册命令
-  src/cmd/rootcmd.rs 文件中定义了命令树，可以在此注册定义好的子命令
+* 查看任务
+    * 查看全部任务
 
-  ```rust
-  lazy_static! {
-      static ref CLIAPP: clap::Command<'static> = clap::Command::new("interact-rs")
-          .version("1.0")
-          .author("Shiwen Jia. <jiashiwen@gmail.com>")
-          .about("command line sample")
-          .arg_required_else_help(true)
-          .arg(
-              Arg::new("config")
-                  .short('c')
-                  .long("config")
-                  .value_name("FILE")
-                  .help("Sets a custom config file")
-                  .takes_value(true)
-          )
-          .arg(
-              Arg::new("daemon")
-                  .short('d')
-                  .long("daemon")
-                  .help("run as daemon")
-          )
-          .arg(
-              Arg::new("interact")
-                  .short('i')
-                  .long("interact")
-                  .conflicts_with("daemon")
-                  .help("run as interact mod")
-          )
-          .arg(
-              Arg::new("v")
-                  .short('v')
-                  .multiple_occurrences(true)
-                  .takes_value(true)
-                  .help("Sets the level of verbosity")
-          )
-          .subcommand(new_requestsample_cmd())
-          .subcommand(new_config_cmd())
-          .subcommand(new_multi_cmd())
-          .subcommand(new_task_cmd())
-          .subcommand(new_loop_cmd())
-          .subcommand(
-              clap::Command::new("test")
-                  .about("controls testing features")
-                  .version("1.3")
-                  .author("Someone E. <someone_else@other.com>")
-                  .arg(
-                      Arg::new("debug")
-                          .short('d')
-                          .help("print debug information verbosely")
-                  )
-          );
-      static ref SUBCMDS: Vec<SubCmd> = subcommands();
-  }
-  
-  pub fn run_app() {
-      let matches = CLIAPP.clone().get_matches();
-      if let Some(c) = matches.value_of("config") {
-          println!("config path is:{}", c);
-          set_config_file_path(c.to_string());
-      }
-      set_config(&get_config_file_path());
-      cmd_match(&matches);
-  }
-  
-  pub fn run_from(args: Vec<String>) {
-      match clap_Command::try_get_matches_from(CLIAPP.to_owned(), args.clone()) {
-          Ok(matches) => {
-              cmd_match(&matches);
-          }
-          Err(err) => {
-              err.print().expect("Error writing Error");
-          }
-      };
-  }
+      ```shell
+      redissyncer-cli-rs> task list all
+      ```
 
-  ```
+    * 查看通过任务id查看任务状态
 
-  定义好的命令不需其他处理，框架会在系统运行时生成子命令树，用于命令提示的支持
+      ```shell
+      redissyncer-cli-rs> task list bytaskid 690DEF6222E34443884033B860CE01EC
+      ```
+
+    * 查看通过任务名称查看任务状态
+
+      ```shell
+      redissyncer-cli-rs> task list bynames $taskname
+      ```
 
 
-* 命令解析
-  src/cmd/rootcmd.rs 中的 cmd_match 负责解析命令，可以把解析逻辑写在该函数中
+* 启动任务
 
-  ```rust
-  fn cmd_match(matches: &ArgMatches) {   
-    if let Some(ref matches) = matches.subcommand_matches("requestsample") {
-        if let Some(_) = matches.subcommand_matches("baidu") {
-            let rt = tokio::runtime::Runtime::new().unwrap();
-            let async_req = async {
-                let result = req::get_baidu().await;
-                println!("{:?}", result);
-            };
-            rt.block_on(async_req);
-        };
-    }
-  }
-  ```
-  
-* 修改交互模式的命令提示
-  提示符可以在src/interact/cli.rs 中定义
+   ```shell
+   redissyncer-cli-rs> task start 690DEF6222E34443884033B860CE01EC
+   ```
 
-  ```rust
-  pub fn run() {
-    
-    ...
+* 停止任务
 
-    loop {
-        let p = format!("{}> ", "interact-rs");
-        rl.helper_mut().expect("No helper").colored_prompt = format!("\x1b[1;32m{}\x1b[0m", p);
+   ```shell
+   redissyncer-cli-rs> task stop 690DEF6222E34443884033B860CE01EC
+   ```
 
-        ...
-    }
-    
-    ...
-  }
+* 通过任务名删除任务
 
-  ```
+   ```shell
+   redissyncer-cli-rs> task remove 690DEF6222E34443884033B860CE01EC
+   ```
