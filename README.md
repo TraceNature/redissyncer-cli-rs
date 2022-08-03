@@ -9,7 +9,7 @@ command line interface for migrate task。
 
 [build document](https://github.com/TraceNature/redissyncer-cli-rs/blob/main/docs/build.md)
 
-## 功能与使用方法
+## Function and usage
 
 * redissyncer-cli-rs supports command line mode and interactive mode, "redissyncer-cli -i" enters interactive mode
 * This client program is used by the redissyncer-server client program to create, start, stop, and monitor redis
@@ -17,8 +17,18 @@ command line interface for migrate task。
 
 ## Operation guide
 
-"redissyncer-cli-rs -i"
-enter interactive mode
+* Generate default configuration file
+
+```shell
+redissyncer-cli-rs config gendefault
+mv config_default.yml config.yml
+```
+
+* Enter interactive mode
+
+```shell
+redissyncer-cli-rs -i
+```
 
 * Configure the redissyncer-server address
 

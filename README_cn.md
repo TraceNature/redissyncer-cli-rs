@@ -15,7 +15,18 @@
 
 ## 操作指南
 
-"redissyncer-cli-rs -i"进入交互模式
+* 生成默认配置文件
+
+```shell
+redissyncer-cli-rs config gendefault
+mv config_default.yml config.yml
+```
+
+* 进入交互模式
+
+```shell
+redissyncer-cli-rs -i
+```
 
 * 配置 redissyncer-server 服务器地址
 
