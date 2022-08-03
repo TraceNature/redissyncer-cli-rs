@@ -1,4 +1,4 @@
-# redissyncer-cli-rs
+~~# redissyncer-cli-rs
 
 [English](README.md)
 
@@ -13,9 +13,15 @@
 * redissyncer-cli-rs 支持命令行模式和交互模式，"redissyncer-cli -i"进入交互模式
 * 该客户端程序为redissyncer-server客户端程序用与创建、启停、监控redis同步任务，在使用本客户端之前请确保服务端程序正常运行
 
-## 交互模式举例
+## 操作指南
 
 "redissyncer-cli-rs -i"进入交互模式
+
+* 配置 redissyncer-server 服务器地址
+
+```shell
+redissyncer-cli-rs> server setting http://127.0.0.1:8080
+```
 
 * 登录
 
@@ -59,13 +65,13 @@ redissyncer-server 默认用户名和密码: admin 123456
       redissyncer-cli-rs> task list all
       ```
 
-    * 查看通过任务id查看任务状态
+    * 通过任务id查看任务状态
 
       ```shell
       redissyncer-cli-rs> task list bytaskid 690DEF6222E34443884033B860CE01EC
       ```
 
-    * 查看通过任务名称查看任务状态
+    * 通过任务名称查看任务状态
 
       ```shell
       redissyncer-cli-rs> task list bynames $taskname
@@ -84,8 +90,8 @@ redissyncer-server 默认用户名和密码: admin 123456
    redissyncer-cli-rs> task stop 690DEF6222E34443884033B860CE01EC
    ```
 
-* 通过任务名删除任务
+* 通过任务ID删除任务
 
    ```shell
    redissyncer-cli-rs> task remove 690DEF6222E34443884033B860CE01EC
-   ```
+   ```~~

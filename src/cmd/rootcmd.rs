@@ -160,6 +160,22 @@ fn cmd_match(matches: &ArgMatches) {
             };
             rt.block_on(async_req);
         };
+
+        if let Some(addr) = matches.subcommand_matches("setting") {
+            if let Some(server) = addr.value_of("addr") {
+                let mut c = get_config();
+                match c {
+                    Ok(mut cfg) => {
+                        cfg.server = server.to_string();
+                        cfg.flush_to_file(get_config_file_path());
+                        println!("set {} successful!", server);
+                    }
+                    Err(e) => {
+                        eprintln!("{}", e);
+                    }
+                }
+            }
+        }
     }
 
     if let Some(ref login) = matches.subcommand_matches("login") {
