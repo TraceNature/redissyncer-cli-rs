@@ -13,3 +13,4 @@ pub use cmdtask::new_task_cmd;
 pub use rootcmd::get_command_completer;
 pub use rootcmd::run_app;
 pub use rootcmd::run_from;
+pub use rootcmd::APP_NAME;

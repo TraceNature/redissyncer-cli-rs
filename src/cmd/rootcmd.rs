@@ -26,8 +26,10 @@ use std::sync::Arc;
 use std::time::Duration;
 use sysinfo::{PidExt, System, SystemExt};
 
+pub static APP_NAME: &str = "redissyncer-cli";
+
 lazy_static! {
-    static ref CLIAPP: clap::Command<'static> = clap::Command::new("redissyncer-cli-rs")
+    static ref CLIAPP: clap::Command<'static> = clap::Command::new(APP_NAME)
         .version("1.0")
         .author("Shiwen Jia. <jiashiwen@gmail.com>")
         .about("redissyncer command line interface")
@@ -67,7 +69,6 @@ pub fn run_app() {
         println!("config path is:{}", c);
         set_config_file_path(c.to_string());
     }
-    // set_config(&get_config_file_path());
     cmd_match(&matches);
 }
 

@@ -1,6 +1,7 @@
-use crate::cmd::{get_command_completer, run_from};
+use crate::cmd::{get_command_completer, run_from, APP_NAME};
 use crate::commons::CommandCompleter;
 use log::error;
+use log4rs::config::Appender;
 use rustyline::completion::{Completer, Pair};
 use rustyline::error::ReadlineError;
 use rustyline::highlight::{Highlighter, MatchingBracketHighlighter};
@@ -105,7 +106,7 @@ pub fn run() {
     }
 
     loop {
-        let p = format!("{}> ", "redissyncer-cli");
+        let p = format!("{}> ", APP_NAME);
         rl.helper_mut().expect("No helper").colored_prompt = format!("\x1b[1;32m{}\x1b[0m", p);
         let readline = rl.readline(&p);
         match readline {
@@ -121,7 +122,7 @@ pub fn run() {
                             println!("bye!");
                             break;
                         }
-                        arg.insert(0, "clisample".to_string());
+                        arg.insert(0, String::from(APP_NAME));
                         run_from(arg.to_vec())
                     }
                     Err(err) => {
