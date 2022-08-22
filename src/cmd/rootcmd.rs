@@ -24,7 +24,6 @@ use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::time::Duration;
-// use sysinfo::{PidExt, System, SystemExt};
 
 pub static APP_NAME: &str = "redissyncer-cli";
 
@@ -114,17 +113,6 @@ fn subcommands() -> Vec<SubCmd> {
     all_subcommand(CLIAPP.clone().borrow(), 0, &mut subcmds);
     subcmds
 }
-
-// pub fn process_exists(pid: &u32) -> bool {
-//     let mut sys = System::new_all();
-//     sys.refresh_all();
-//     for (syspid, _) in sys.processes() {
-//         if syspid.as_u32().eq(pid) {
-//             return true;
-//         }
-//     }
-//     return false;
-// }
 
 fn cmd_match(matches: &ArgMatches) {
     if let Some(c) = matches.value_of("config") {
