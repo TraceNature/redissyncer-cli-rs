@@ -332,6 +332,29 @@ fn cmd_match(matches: &ArgMatches) {
             }
         }
 
+        if let Some(create) = matches.subcommand_matches("import") {
+            let file = File::open(create.value_of("path").unwrap());
+            match file {
+                Ok(mut f) => {
+                    let mut data = String::new();
+                    if let Err(e) = f.read_to_string(&mut data) {
+                        println!("{}", e);
+                        return;
+                    };
+                    let rt = tokio::runtime::Runtime::new().unwrap();
+                    let async_req = async {
+                        let resp = req.origin_task_import(data).await;
+                        let result = ReqResult::new(resp);
+                        result.normal_parsor().await;
+                    };
+                    rt.block_on(async_req);
+                }
+                Err(e) => {
+                    println!("{}", e);
+                }
+            }
+        }
+
         if let Some(start) = matches.subcommand_matches("start") {
             if let Some(taskid) = start.value_of("taskid") {
                 let rt = tokio::runtime::Runtime::new().unwrap();

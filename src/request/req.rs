@@ -126,6 +126,17 @@ impl Request {
         Result::Ok(resp)
     }
 
+    pub async fn origin_task_import(&self, body: String) -> Result<Response> {
+        let mut server = self.server.clone();
+        server.push_str(API_ORIGIN_IMPORT);
+        let url = Url::parse(server.as_str()).map_err(|e| {
+            return ResponseError::OptionError(e.to_string());
+        })?;
+        println!("{}", url);
+        let resp = self.send(url, body).await?;
+        Result::Ok(resp)
+    }
+
     pub async fn origin_task_start(&self, task_id: String) -> Result<Response> {
         let mut server = self.server.clone();
         server.push_str(API_ORIGIN_TASK_START);
@@ -138,6 +149,7 @@ impl Request {
         let resp = self.send(url, json.to_string()).await?;
         Result::Ok(resp)
     }
+
     pub async fn origin_task_stop(&self, task_id: String) -> Result<Response> {
         let mut server = self.server.clone();
         server.push_str(API_ORIGIN_TASK_STOP);
@@ -152,6 +164,7 @@ impl Request {
         let resp = self.send(url, json.to_string()).await?;
         Result::Ok(resp)
     }
+
     pub async fn origin_task_remove(&self, task_id: String) -> Result<Response> {
         let mut server = self.server.clone();
         server.push_str(API_ORIGIN_TASK_REMOVE);
@@ -166,6 +179,7 @@ impl Request {
         let resp = self.send(url, json.to_string()).await?;
         Result::Ok(resp)
     }
+
     pub async fn origin_task_list_all(&self) -> Result<Response> {
         // let body = serde_json::to_string(&module).map_err(|e| {
         //     return ResponseError::OptionError(e.to_string());
@@ -196,7 +210,6 @@ impl Request {
         Result::Ok(resp)
     }
     pub async fn origin_task_list_byname(&self) {}
-    pub async fn origin_task_import() {}
 }
 
 impl Request {

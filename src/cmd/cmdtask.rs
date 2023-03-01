@@ -4,6 +4,7 @@ pub fn new_task_cmd() -> Command<'static> {
     clap::Command::new("task")
         .about("command about task")
         .subcommand(cmd_task_create())
+        .subcommand(cmd_task_import())
         .subcommand(cmd_task_start())
         .subcommand(cmd_task_stop())
         .subcommand(cmd_task_remove())
@@ -14,6 +15,12 @@ fn cmd_task_create() -> Command<'static> {
     clap::Command::new("create")
         .about("create task")
         .arg(arg!(<path> "create task json file path"))
+}
+
+fn cmd_task_import() -> Command<'static> {
+    clap::Command::new("import")
+        .about("create task for import rdb or aof file")
+        .arg(arg!(<path> "create import task json file path"))
 }
 
 fn cmd_task_start() -> Command<'static> {
