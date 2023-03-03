@@ -1,29 +1,20 @@
 use crate::cmd::cmdserver::new_server_cmd;
 use crate::cmd::{new_cluster_cmd, new_config_cmd, new_task_cmd};
-use crate::commons::CommandCompleter;
 use crate::commons::SubCmd;
-
-use crate::configure::{self, get_config, get_config_file_path, set_config, Config};
-use crate::configure::{generate_default_config, set_config_file_path};
-use crate::request::{req, ReqResult, Request, RequestLogin, RequestTaskListAll};
-use crate::{configure::set_config_from_file, interact};
-use clap::{Arg, ArgMatches, Command as clap_Command};
-use lazy_static::lazy_static;
-use log::{info, log};
-
-use std::borrow::Borrow;
-use std::{env, fs, thread};
+use crate::commons::{struct_to_yml_file, CommandCompleter};
 
 use crate::cmd::cmdlogin::new_login_cmd;
+use crate::configure::{self, get_config, get_config_file_path, set_config, Config};
+use crate::configure::{generate_default_config, set_config_file_path};
+use crate::request::{ReqResult, Request, RequestTaskListAll};
+use crate::{configure::set_config_from_file, interact};
 use chrono::prelude::Local;
+use clap::{Arg, ArgMatches, Command as clap_Command};
+use lazy_static::lazy_static;
 use serde_json::Value;
+use std::borrow::Borrow;
 use std::fs::File;
 use std::io::Read;
-use std::process::Command;
-use std::sync::atomic::AtomicBool;
-use std::sync::atomic::Ordering;
-use std::sync::Arc;
-use std::time::Duration;
 
 pub static APP_NAME: &str = "redissyncer-cli";
 
@@ -485,18 +476,82 @@ fn cmd_match(matches: &ArgMatches) {
                 _ => {}
             }
         }
-        if let Some(gen_config) = config.subcommand_matches("gendefault") {
-            let mut file = String::from("");
-            if let Some(path) = gen_config.value_of("filepath") {
-                file.push_str(path);
-            } else {
-                file.push_str("config_default.yml")
+
+        if let Some(setting) = config.subcommand_matches("setting") {
+            if let Some(server) = setting.subcommand_matches("server") {
+                if let Some(server) = server.value_of("addr") {
+                    let c = get_config();
+                    match c {
+                        Ok(mut cfg) => {
+                            cfg.server = server.to_string();
+                            cfg.flush_to_file(get_config_file_path());
+                            println!("set server: {} successful!", server);
+                        }
+                        Err(e) => {
+                            eprintln!("{}", e);
+                        }
+                    }
+                }
             }
-            if let Err(e) = generate_default_config(file.as_str()) {
-                log::error!("{}", e);
-                return;
-            };
-            println!("{} created!", file);
+
+            if let Some(token) = setting.subcommand_matches("token") {
+                if let Some(token) = token.value_of("token_string") {
+                    let c = get_config();
+                    match c {
+                        Ok(mut cfg) => {
+                            cfg.token = token.to_string();
+                            cfg.flush_to_file(get_config_file_path());
+                            println!("set token: {} successful!", token);
+                        }
+                        Err(e) => {
+                            eprintln!("{}", e);
+                        }
+                    }
+                }
+            }
+        }
+
+        if let Some(save) = config.subcommand_matches("save") {
+            if let Some(gen_config) = save.subcommand_matches("default") {
+                let mut file = String::from("");
+                if let Some(path) = gen_config.value_of("filepath") {
+                    file.push_str(path);
+                } else {
+                    file.push_str("config_default.yml")
+                }
+                if let Err(e) = generate_default_config(file.as_str()) {
+                    log::error!("{}", e);
+                    return;
+                };
+                println!("{} created!", file);
+            }
+
+            if let Some(gen_config) = save.subcommand_matches("current") {
+                let fmt = "%Y-%m-%d_%H:%M:%S";
+                let now = Local::now().format(fmt).to_string();
+                let mut file = String::from("");
+                if let Some(path) = gen_config.value_of("filepath") {
+                    file.push_str(path);
+                } else {
+                    file.push_str("config_current_");
+                    file.push_str(&now);
+                    file.push_str(".yml");
+                }
+
+                match configure::get_config() {
+                    Ok(current) => {
+                        if let Err(e) = struct_to_yml_file::<Config>(&current, &file) {
+                            log::error!("{}", e);
+                            return;
+                        };
+                        println!("{} created!", file);
+                    }
+                    Err(e) => {
+                        log::error!("{}", e);
+                        return;
+                    }
+                }
+            }
         }
     }
 }

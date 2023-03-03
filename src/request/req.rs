@@ -181,9 +181,6 @@ impl Request {
     }
 
     pub async fn origin_task_list_all(&self) -> Result<Response> {
-        // let body = serde_json::to_string(&module).map_err(|e| {
-        //     return ResponseError::OptionError(e.to_string());
-        // })?;
         let mut server = self.server.clone();
         server.push_str(API_ORIGIN_TASK_LIST);
         let url = Url::parse(server.as_str()).map_err(|e| {
