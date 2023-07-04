@@ -1,4 +1,4 @@
-~~# redissyncer-cli-rs
+# redissyncer-cli-rs
 
 [English](README.md)
 
