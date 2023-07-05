@@ -370,13 +370,16 @@ fn cmd_match(matches: &ArgMatches) {
             match list.subcommand_name() {
                 Some("all") => {
                     let rt = tokio::runtime::Runtime::new().unwrap();
-                    let async_req = async {
+                    // let async_req = async {
+                    //     let resp = req.origin_task_list_all().await;
+                    //     let result = ReqResult::new(resp);
+                    //     result.origin_task_list_all_parsor().await;
+                    // };
+                    rt.block_on(async {
                         let resp = req.origin_task_list_all().await;
                         let result = ReqResult::new(resp);
                         result.origin_task_list_all_parsor().await;
-                        // result.normal_parsor().await;
-                    };
-                    rt.block_on(async_req);
+                    });
                     // let queryid = list.subcommand_matches("all").unwrap().value_of("queryid");
                     // let mut module = RequestTaskListAll::default();
                     // let rt = tokio::runtime::Runtime::new().unwrap();
