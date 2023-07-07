@@ -5,8 +5,9 @@
 * ubuntu
 
 ```shell
-sudo apt install pkg-config
-sudo apt-get install libudev-dev
+sudo apt install -y pkg-config libudev-dev
+sudo apt install -y aptitude
+aptitude install libssl-dev
 cargo build --release
 ```
 
