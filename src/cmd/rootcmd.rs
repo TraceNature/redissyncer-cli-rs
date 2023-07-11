@@ -370,32 +370,16 @@ fn cmd_match(matches: &ArgMatches) {
             match list.subcommand_name() {
                 Some("all") => {
                     let rt = tokio::runtime::Runtime::new().unwrap();
-                    let async_req = async {
+                    // let async_req = async {
+                    //     let resp = req.origin_task_list_all().await;
+                    //     let result = ReqResult::new(resp);
+                    //     result.origin_task_list_all_parsor().await;
+                    // };
+                    rt.block_on(async {
                         let resp = req.origin_task_list_all().await;
                         let result = ReqResult::new(resp);
                         result.origin_task_list_all_parsor().await;
-                        // result.normal_parsor().await;
-                    };
-                    rt.block_on(async_req);
-                    // let queryid = list.subcommand_matches("all").unwrap().value_of("queryid");
-                    // let mut module = RequestTaskListAll::default();
-                    // let rt = tokio::runtime::Runtime::new().unwrap();
-                    // let async_req = async {
-                    //     match queryid {
-                    //         None => {
-                    //             let resp = req.task_list_all(module).await;
-                    //             let result = ReqResult::new(resp);
-                    //             result.task_list_all_parsor().await;
-                    //         }
-                    //         Some(id) => {
-                    //             module.set_query_id(id.to_string());
-                    //             let resp = req.task_list_all(module).await;
-                    //             let result = ReqResult::new(resp);
-                    //             result.task_list_all_parsor().await;
-                    //         }
-                    //     }
-                    // };
-                    // rt.block_on(async_req);
+                    });
                 }
                 Some("byid") => {
                     let queryid = list.subcommand_matches("byid").unwrap().value_of("taskid");

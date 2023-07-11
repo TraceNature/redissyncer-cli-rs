@@ -5,6 +5,7 @@ use serde_json::{to_string_pretty, Value};
 
 use super::req;
 
+#[derive(Debug)]
 pub struct ReqResult {
     result: req::Result<Response>,
 }
@@ -54,6 +55,7 @@ impl ReqResult {
                     match serde_json::from_str::<Value>(body.clone().as_str()) {
                         Ok(body) => {
                             // assert!(body["errors"].is_null());
+                            // println!("{}", body["errors"].is_null());
                             if body["errors"].is_null() {
                                 let mut table = Table::new();
                                 table.add_row(row!["taskID", "source", "target", "status"]);
@@ -83,6 +85,28 @@ impl ReqResult {
                                     Err(e) => println!("{}", e),
                                 }
                             }
+
+                            // let mut table = Table::new();
+                            // table.add_row(row!["taskID", "source", "target", "status"]);
+
+                            // if let Some(valuse) = body["data"].as_array() {
+                            //     println!("{:?}", valuse);
+                            //     for iterm in valuse {
+                            //         let taskid = iterm["taskId"].as_str().unwrap();
+                            //         let source = iterm["sourceRedisAddress"].as_str().unwrap();
+                            //         let target = iterm["targetRedisAddress"].as_str().unwrap();
+                            //         let status = iterm["status"].as_str().unwrap();
+                            //         table.add_row(Row::new(vec![
+                            //             Cell::new(taskid),
+                            //             Cell::new(source),
+                            //             Cell::new(target),
+                            //             Cell::new(status),
+                            //         ]));
+                            //     }
+                            // };
+
+                            // // Print the table to stdout
+                            // table.printstd();
                         }
                         Err(e) => {
                             println!("{}", e.to_string());
@@ -199,13 +223,13 @@ impl ReqResult {
                                         let target = task["taskStatus"]["targetRedisAddress"]
                                             .as_str()
                                             .unwrap();
-                                        let status = task["taskStatus"]["status"].as_i64().unwrap();
+                                        let status = task["taskStatus"]["status"].as_str().unwrap();
                                         table.add_row(Row::new(vec![
                                             Cell::new(taskname),
                                             Cell::new(taskid),
                                             Cell::new(source),
                                             Cell::new(target),
-                                            Cell::new(status.to_string().as_str()),
+                                            Cell::new(status),
                                         ]));
                                     }
                                 }

@@ -49,3 +49,9 @@ cross build --release --target x86_64-pc-windows-gnu
 * 编译 linux 可执行文件
 
 * macos 请在 mac rust 环境下编译
+
+
+## 参考文档
+
+https://kerkour.com/rust-cross-compilation
+
