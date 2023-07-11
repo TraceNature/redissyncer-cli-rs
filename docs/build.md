@@ -5,8 +5,9 @@
 * ubuntu
 
 ```shell
-sudo apt install pkg-config
-sudo apt-get install libudev-dev
+sudo apt install -y pkg-config libudev-dev
+sudo apt install -y aptitude
+aptitude install libssl-dev
 cargo build --release
 ```
 
@@ -49,6 +50,8 @@ cross build --release --target x86_64-pc-windows-gnu
 
 * macos 请在 mac rust 环境下编译
 
+
 ## 参考文档
 
 https://kerkour.com/rust-cross-compilation
+
