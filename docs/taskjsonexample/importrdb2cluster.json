@@ -3,7 +3,7 @@
   "targetRedisAddress": "10.0.1.102:6379",
   "targetPassword": "redistest0102",
   "taskName": "importrdbcase",
-  "targetRedisType":"CLUSTER",
+  "targetRedisType": "CLUSTER",
   "autostart": true,
   "fileType": "RDB",
   "batchSize": 500,
